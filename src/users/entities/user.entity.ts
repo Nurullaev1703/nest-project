@@ -1,10 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Address } from "./address.entity";
+import { AbstractEntity } from "src/abstractions/abstract.entity";
+import { Project } from "src/projects/entities/project.entity";
+import { Task } from "src/projects/entities/task.entity";
 
 @Entity()
-export class User {
-    @PrimaryGeneratedColumn("uuid")
-    id:string
-
+export class User extends AbstractEntity<User> {
     @Column({name: "first_name"})
     firstName:string
 
@@ -20,7 +21,15 @@ export class User {
     @Column()
     password:string
 
-    constructor(item: Partial<User>){
-        Object.assign(this, item)
-    }
+    @OneToOne(() => Address, {cascade: true})
+    @JoinColumn()
+    address:Address
+
+    @ManyToMany(() => Project, (project) => project.users, {cascade: true})
+    @JoinTable()
+    projects: Project[]
+
+    @OneToMany(() => Task, (tasks) => tasks.user)
+    @JoinTable()
+    tasks: Task[]
 }
