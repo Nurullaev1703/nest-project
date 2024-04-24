@@ -32,7 +32,7 @@ export class AuthenticationService {
       throw new HttpException('Некорректный пароль', HttpStatus.UNAUTHORIZED)
     }
 
-    const payload = {sub: user.id, username: user.username}
+    const payload:TokenData = {id:user.id}
     const token = await this.jwtService.signAsync(payload)
 
     return token;

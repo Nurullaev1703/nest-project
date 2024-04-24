@@ -10,6 +10,7 @@ async function bootstrap() {
     .setDescription('test lessons')
     .setVersion('1.0')
     .addTag('geron')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

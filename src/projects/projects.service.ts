@@ -25,13 +25,10 @@ export class ProjectsService {
     return 'Created new project';
   }
 
-  async findAll(filters: GetProjectsFilterDto) {
-    let where:FindOptionsWhere<Project> = {}
-
-    if(filters.userId){
-      where = {...where, users: { id:filters.userId}}
-    }
-    return this.projectRepository.find({where});
+  async findAll(tokenData: TokenData) {
+    return this.projectRepository.find({
+      where: {users: { id:tokenData.id}}
+    })
   }
 
   async findOne(id: string) {

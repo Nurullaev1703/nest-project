@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Projects')
+@ApiBearerAuth()
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
@@ -16,8 +17,8 @@ export class ProjectsController {
   }
 
   @Get()
-  findAll(@Query() filters:GetProjectsFilterDto) {
-    return this.projectsService.findAll(filters);
+  findAll(@Request() req:AuthRequest) {
+    return this.projectsService.findAll(req.user);
   }
 
   @Get(':id')
