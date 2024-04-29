@@ -3,9 +3,9 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { GetProjectsFilterDto } from './dto/get-projects-filter.dto';
+import { Repository } from 'typeorm';
+import { Role, RolesProject } from './entities/role.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -15,49 +15,57 @@ export class ProjectsService {
     private readonly projectRepository: Repository<Project>,
 
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Role)
+    private readonly rolesRepository: Repository<Role>
   ){}
 
-  async create(createProjectDto: CreateProjectDto) {
+  async create(tokenData:TokenData, createProjectDto: CreateProjectDto) {
+    const user = await this.userRepository.findOne({
+      where:{
+        id: tokenData.id
+      }
+    })
     const project = new Project(createProjectDto)
-    await this.projectRepository.save(project)
 
-    return 'Created new project';
+    await this.projectRepository.save(project)
+    await this.rolesRepository.save({
+      user,
+      project,
+      role: RolesProject.admin
+    })
+    return JSON.stringify("Проект создан")
   }
 
   async findAll(tokenData: TokenData) {
     return this.projectRepository.find({
-      where: {users: { id:tokenData.id}}
+      where: {roles: { 
+        user: {
+          id:tokenData.id
+        }
+      }}
     })
   }
 
-  async findOne(id: string) {
-    return this.projectRepository.findOne({
-      where: {id},
-      relations: {
-        users: true
+  async findParticipants(projectId:string){
+    return this.rolesRepository.find({
+      where:{
+        project:{
+          id: projectId
+        }
+      },
+      relations:{
+        user:true
+      },
+      select:{
+        role:true,
+        user:{
+          username:true,
+          firstName:true,
+          lastName:true,
+        }
       }
-    });
-  }
-
-  async update(id: string, updateProjectDto: UpdateProjectDto) {
-    const project = new Project(updateProjectDto)
-
-    if(updateProjectDto?.userID){
-      const user = await this.userRepository.findOneBy({
-        id: updateProjectDto.userID
-      })
-
-      project.users = [...(project.users ?? []), user]
-    }
-
-    await this.projectRepository.save({id, ...project})
-
-    return `Project updated`;
-  }
-
-  async remove(id: string) {
-    await this.projectRepository.delete({id})
-    return `project removed`;
+    })
   }
 }
